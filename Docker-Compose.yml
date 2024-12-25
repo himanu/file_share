@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./drive_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./drive_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./drive_backend:/app  # Mount the backend directory to allow live changes
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
