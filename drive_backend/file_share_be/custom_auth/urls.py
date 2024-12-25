@@ -16,6 +16,12 @@ Including another URLconf
 """
 
 
+from django.urls import path
+from .views import RegisterUserView, LoginView, VerifyOTPView
+
 urlpatterns = [
-    # path('', include('auth.urls')),
+    path('register', RegisterUserView.as_view(), name='register'),
+    path('login', LoginView.as_view(), name='login'),
+    path('verify_otp', VerifyOTPView.as_view(), name='verifyOTP'),
 ]
+

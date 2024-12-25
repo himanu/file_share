@@ -21,6 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-i-46isap!dp!7$rqv_tqfdn22qefs)(0y81f9o^aw46xgw3#&g'
+JWT_SECRET_KEY = 'r9ZN4MNFJZ_xI5hBP-GXm7kNeDL-0dVuGdTFIbU3ZkNh6bN9PToC1YZX63lYzRpbGoI'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -122,3 +123,12 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Email settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # SMTP server
+EMAIL_PORT = 587  # For TLS
+EMAIL_USE_TLS = True  # Use TLS encryption
+EMAIL_USE_SSL = False  # Ensure SSL is disabled when using TLS
+EMAIL_HOST_USER = 'dntreplyhere75@gmail.com'  # Replace with your Gmail address
+EMAIL_HOST_PASSWORD = 'qnepwalhiovqcfyu'  # Replace with your Gmail password or app password
