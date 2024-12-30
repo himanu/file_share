@@ -26,7 +26,7 @@ class User(AbstractBaseUser):
     ]
 
     email = models.EmailField(unique=True)
-    password = models.CharField(max_length=128)
+    password = models.CharField(max_length=128, unique=True)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='normal')
 
     objects = CustomUserManager()

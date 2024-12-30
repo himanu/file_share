@@ -1,6 +1,10 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.exceptions import AuthenticationFailed
+
 from .models import User, OTP
 from .serializers import UserSerializer
 from django.contrib.auth.hashers import check_password
@@ -10,12 +14,15 @@ from datetime import datetime, timedelta
 import jwt
 from django.conf import settings
 from django.utils.timezone import now
+from rest_framework.permissions import AllowAny
+from django.http import JsonResponse
 
 
-JWT_SECRET = settings.JWT_SECRET_KEY
+JWT_SECRET = settings.SECRET_KEY
 JWT_ALGORITHM = "HS256"
 
 class RegisterUserView(APIView):
+    permission_classes = [AllowAny]
     def post(self, request):
         try:
             with transaction.atomic():
@@ -29,13 +36,13 @@ class RegisterUserView(APIView):
         except Exception as e:
             return Response(e, status=500)
 
-
 class LoginView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
         is_guest_user = request.data.get('isGuestUser', False)
-
         if not email:
             return Response(
                 {"error": "Email is required."},
@@ -45,7 +52,6 @@ class LoginView(APIView):
         try:
             # Search for user by email
             user = User.objects.filter(email=email).first()
-
             if user:
                 if user.role == 'guest':
                     # Send OTP for guest user
@@ -95,13 +101,14 @@ class LoginView(APIView):
             )
 
 class VerifyOTPView(APIView):
+    permission_classes = [AllowAny]
     def post(self, request):
         email = request.data.get('email')
         otp = request.data.get('otp')
 
         if not email or not otp:
             return Response(
-                {"error": "Email and OTP are required."},
+                {"error": "Email and OTP are required.", "redirectToLogin": True},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -118,14 +125,14 @@ class VerifyOTPView(APIView):
 
             if not otp_record:
                 return Response(
-                    {"error": "Please verify your email and password first."},
+                    {"error": "Please verify your email and password first.", "redirectToLogin": True},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
             # Check if OTP is expired
             if otp_record.expiration_time < now():
                 return Response(
-                    {"error": "OTP has expired."},
+                    {"error": "OTP has expired.", "redirectToLogin": True},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -136,12 +143,12 @@ class VerifyOTPView(APIView):
                 if otp_record.remaining_attempts <= 0:
                     otp_record.delete()
                     return Response(
-                        {"error": "Invalid OTP. No remaining attempts. Please request a new OTP."},
+                        {"error": "Invalid OTP. No remaining attempts. Please request a new OTP.", "redirectToLogin": True},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
 
                 return Response(
-                    {"error": f"Invalid OTP. Remaining attempts: {otp_record.remaining_attempts}."},
+                    {"error": f"Incorrect OTP. Remaining attempts: {otp_record.remaining_attempts}."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             # If OTP is valid, create a JWT token
@@ -150,14 +157,52 @@ class VerifyOTPView(APIView):
                 "exp": datetime.utcnow() + timedelta(hours=1),  # Token expiry time (1 hour)
             }
             token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
-
-            return Response(
-                {"message": "OTP verified successfully.", "token": token},
+            response =  Response(
+                {"message": "OTP verified successfully.", "user": {
+                    "email": user.email
+                }, },
                 status=status.HTTP_200_OK,
             )
+            response.set_cookie(
+                key='token',
+                value=token,
+                httponly=True,  # Prevent JavaScript access
+                # secure=True,    # Use in production
+                samesite='Strict', # Prevent cross-site request forgery
+                max_age=3600,   # Set cookie expiration time in seconds
+            )
+            return response
 
         except Exception as e:
             return Response(
                 {"error": f"An error occurred: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+        
+class GetUserDetailsView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, *args, **kwargs):
+        if not request.user:
+            raise AuthenticationFailed('Token not provided in cookies.')
+        return Response({
+            'email': request.user.email
+        })
+
+class GetAllUserDetailsView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, *args, **kwargs):
+        if not request.user:
+            raise AuthenticationFailed('Token not provided in cookies.')
+        users = User.objects.exclude(id=request.user.id)
+        print(f"Users {users}")
+        users_data = [{'email': user.email} for user in users]
+        return JsonResponse({'users': users_data})
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        response = JsonResponse({"message": "Logged out successfully."}, status=200)
+        # Clear the cookie containing the JWT
+        response.delete_cookie("token")
+        return response

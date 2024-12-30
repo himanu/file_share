@@ -17,11 +17,14 @@ Including another URLconf
 
 
 from django.urls import path
-from .views import RegisterUserView, LoginView, VerifyOTPView
+from .views import RegisterUserView, LoginView, VerifyOTPView, GetUserDetailsView, LogoutView, GetAllUserDetailsView
 
 urlpatterns = [
     path('register', RegisterUserView.as_view(), name='register'),
     path('login', LoginView.as_view(), name='login'),
     path('verify_otp', VerifyOTPView.as_view(), name='verifyOTP'),
+    path('get_user', GetUserDetailsView.as_view(), name='getUser'),
+    path('logout', LogoutView.as_view(), name='logout'),
+    path('get_users', GetAllUserDetailsView.as_view(), name='getAllUsers'),
 ]
 

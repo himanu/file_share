@@ -15,13 +15,11 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-i-46isap!dp!7$rqv_tqfdn22qefs)(0y81f9o^aw46xgw3#&g'
-JWT_SECRET_KEY = 'r9ZN4MNFJZ_xI5hBP-GXm7kNeDL-0dVuGdTFIbU3ZkNh6bN9PToC1YZX63lYzRpbGoI'
+SECRET_KEY = 'r9ZN4MNFJZ_xI5hBP-GXm7kNeDL-0dVuGdTFIbU3ZkNh6bN9PToC1YZX63lYzRpbGoI'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -39,9 +37,39 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'custom_auth',
+    'files',
+    'corsheaders',
+    'rest_framework',
+    'rest_framework_simplejwt',
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'custom_auth.authentication.JWTAuthenticationFromCookie',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173", 
+     "http://localhost:3000" # Add your frontend's URL
+]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Add your front-end URL here
+    "http://localhost:5173",  # Add your front-end URL here
+]
+CORS_ALLOW_METHODS = (
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+)
+
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware', 
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -81,7 +109,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
