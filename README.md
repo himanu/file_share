@@ -25,6 +25,8 @@ A secure file-sharing web application where users can upload, encrypt, and share
 - **Database**: [Sqlite]
 - **Authentication**: [JWT Session Cookie based]
 
+### GenAI
+- **Tools**: [Claude, ChatGPT, V0]
 
 ## Setup Instructions
 
@@ -35,4 +37,20 @@ A secure file-sharing web application where users can upload, encrypt, and share
 git clone https://github.com/himanu/file_share.git
 cd file_share
 
+```
+#### Dockerize it
+```
 docker-compose up --build
+```
+#### Frontend Url
+```
+http://localhost:3000/
+```
+
+#### Admin Panel Credential
+```bash
+username = admin
+password = adminpass
+Admin Panel url = http://localhost:8000/admin/
+```
+
