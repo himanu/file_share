@@ -12,10 +12,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Add these lines before CMD
-# ENV DJANGO_SUPERUSER_EMAIL=admin@example.com
-# ENV DJANGO_SUPERUSER_PASSWORD=adminpass
-# RUN python file_share_be/manage.py migrate
-# RUN python file_share_be/manage.py createsuperuser --noinput
+
+ENV DJANGO_SUPERUSER_USERNAME=admin
+ENV DJANGO_SUPERUSER_EMAIL=admin@example.com
+ENV DJANGO_SUPERUSER_PASSWORD=adminpass
+
+RUN python file_share_be/manage.py migrate
+RUN python file_share_be/manage.py createsuperuser --noinput
 
 # Step 5: Expose the port (Django default port)
 EXPOSE 8000

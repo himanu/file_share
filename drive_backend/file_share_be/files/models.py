@@ -22,7 +22,7 @@ class FileAccess(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Access for {self.user.username} to {self.file.filename}"
+        return f"Access for {self.file.filename} to {self.user.email}"
     
     def is_access_valid(self):
         if self.expiration_time and self.expiration_time < now():

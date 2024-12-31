@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.utils.timezone import now
 from datetime import timedelta
+from django.contrib import admin
 
 # User Manager
 class CustomUserManager(BaseUserManager):
@@ -54,3 +55,5 @@ class OTP(models.Model):
 
     def __str__(self):
         return f"OTP for {self.user.email} ({self.flow})"
+
+
