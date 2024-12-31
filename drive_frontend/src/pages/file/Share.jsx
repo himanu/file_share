@@ -18,9 +18,12 @@ const ShareModal = ({ isOpen, onClose, fileName, copyLink, users, fileId }) => {
     const [expiryInput, setExpiryInput] = useState(''); // New state for custom expiry input
     const dispatch = useDispatch();
     const navigate = useNavigate();
-  
-    const suggestions = users.map((user) => user?.email ?? "");
-  
+    const suggestions = users.map((user) => {
+      if (user?.role == "guest")
+        return (user?.email ?? "") + " (Guest)"
+      return user?.email ?? ""
+    });
+    console.log("suggestion ", suggestions)
     const handleAddUser = (email) => {
         dispatch(giveFileAccess(fileId, email, navigate))
         setUserInput('');
@@ -61,17 +64,17 @@ const ShareModal = ({ isOpen, onClose, fileName, copyLink, users, fileId }) => {
               />
               {showSuggestion && (
                 <div className="mt-2 space-y-1">
-                  {suggestions
-                    .filter((suggestion) =>
-                      !userInput || suggestion.toLowerCase().includes(userInput.toLowerCase())
+                  {users
+                    .filter((user) =>
+                      !userInput || user?.email?.toLowerCase().includes(userInput.toLowerCase())
                     )
-                    .map((suggestion, index) => (
+                    .map((user, index) => (
                       <div
                         key={index}
                         className="cursor-pointer text-sm p-2 bg-gray-500 hover:bg-gray-700 rounded"
-                        onClick={() => handleAddUser(suggestion)}
+                        onClick={() => handleAddUser(user?.email)}
                       >
-                        {suggestion}
+                        {user?.role == 'guest' ? (user?.email ?? "") + " (Guest)" : (user?.email ?? "")}
                       </div>
                     ))}
                 </div>

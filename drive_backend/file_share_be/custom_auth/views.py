@@ -159,7 +159,8 @@ class VerifyOTPView(APIView):
             token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
             response =  Response(
                 {"message": "OTP verified successfully.", "user": {
-                    "email": user.email
+                    "email": user.email,
+                    "role": user.role
                 }, },
                 status=status.HTTP_200_OK,
             )
@@ -185,7 +186,8 @@ class GetUserDetailsView(APIView):
         if not request.user:
             raise AuthenticationFailed('Token not provided in cookies.')
         return Response({
-            'email': request.user.email
+            'email': request.user.email,
+            'role': request.user.role
         })
 
 class GetAllUserDetailsView(APIView):
@@ -195,7 +197,7 @@ class GetAllUserDetailsView(APIView):
             raise AuthenticationFailed('Token not provided in cookies.')
         users = User.objects.exclude(id=request.user.id)
         print(f"Users {users}")
-        users_data = [{'email': user.email} for user in users]
+        users_data = [{'email': user.email, 'role': user.role} for user in users]
         return JsonResponse({'users': users_data})
 
 class LogoutView(APIView):

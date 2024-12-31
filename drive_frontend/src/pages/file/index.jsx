@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { LOADER_ON, LOADER_OFF } from "../../store/loader/actionTypes";
 import { toast } from "react-toastify";
 import { allowedFileTypes, encryptFile, formatDate } from "./utils";
-import {fileTypeFromBlob} from 'file-type';
+import { fileTypeFromBlob } from 'file-type';
 
 const FileShareComponent = () => {
     const [files, setFiles] = useState([]);
@@ -14,6 +14,7 @@ const FileShareComponent = () => {
     const dispatch = useDispatch();
     const password = localStorage.getItem("password")
     const loading = useSelector(store => store.loader.loading)
+    const user = useSelector(store => store.auth.user)
 
     // Handle file upload
     const handleFileUpload = async (event) => {
@@ -32,44 +33,44 @@ const FileShareComponent = () => {
                 })
                 return;
             }
-            const {data, filename} = await encryptFile(uploadedFile, password);
+            const { data, filename } = await encryptFile(uploadedFile, password);
             uploadEncryptedFile(data, filename, type.mime);
             // setFiles((prevFiles) => [...prevFiles, newFile]);
         }
     };
     async function uploadEncryptedFile(encryptedArray, filename, fileType = "") {
         try {
-          // Convert Uint8Array to a Blob
-          const fileBlob = new Blob([encryptedArray], { type: "application/octet-stream" });
-          // Create a FormData object
-          const formData = new FormData();
-          formData.append("filename", filename);
-          formData.append("encrypted_data", fileBlob);
-          formData.append("file_type", fileType);
-      
-          // Send POST request to the backend
-          const {data: {id, filename: file_name, upload_date}} = await axios.post(`${baseUrl}/file`, formData, {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-            withCredentials: true
-          });
-          toast.dismiss()
-          toast.success("Successfully uploaded file");
-          setFiles((prev) => [...prev, {
-            id,
-            filename: file_name,
-            upload_date
-          }])
+            // Convert Uint8Array to a Blob
+            const fileBlob = new Blob([encryptedArray], { type: "application/octet-stream" });
+            // Create a FormData object
+            const formData = new FormData();
+            formData.append("filename", filename);
+            formData.append("encrypted_data", fileBlob);
+            formData.append("file_type", fileType);
+
+            // Send POST request to the backend
+            const { data: { id, filename: file_name, upload_date } } = await axios.post(`${baseUrl}/file`, formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+                withCredentials: true
+            });
+            toast.dismiss()
+            toast.success("Successfully uploaded file");
+            setFiles((prev) => [...prev, {
+                id,
+                filename: file_name,
+                upload_date
+            }])
         } catch (error) {
-          console.error("Error uploading file:", error);
+            console.error("Error uploading file:", error);
         } finally {
             // setFiles()
             dispatch({
                 type: LOADER_OFF
             })
         }
-     }
+    }
 
     // Handle file click (navigate to URL)
     const handleFileClick = (fileId) => {
@@ -85,7 +86,7 @@ const FileShareComponent = () => {
             });
             setFiles(response?.data?.files)
             console.log("response ", response);
-        } catch(err) {
+        } catch (err) {
             if (err.status == 401) {
                 navigate("/auth/signin")
             }
@@ -100,24 +101,25 @@ const FileShareComponent = () => {
     }, [])
     if (loading)
         return null;
-
+    console.log("user ", user);
     return (
         <div className="p-6 mt-6 mx-auto">
             {/* Header with Heading and Upload Button */}
             <div className="flex mb-6 justify-between items-center mb-[30px]">
-                <h1 className="text-4xl font-bold text-black-800">Your Files</h1>
-                <label
-                    htmlFor="file-upload"
-                    className="cursor-pointer bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
-                >
-                    Upload File
-                </label>
-                <input
-                    id="file-upload"
-                    type="file"
-                    className="hidden"
-                    onChange={handleFileUpload}
-                />
+                {user?.role === "guest" ? <h1 className="text-4xl font-bold text-black-800">Welcome</h1> : <>
+                    <h1 className="text-4xl font-bold text-black-800">Your Files</h1>
+                    <label
+                        htmlFor="file-upload"
+                        className="cursor-pointer bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+                    >
+                        Upload File
+                    </label>
+                    <input
+                        id="file-upload"
+                        type="file"
+                        className="hidden"
+                        onChange={handleFileUpload}
+                    /></>}
             </div>
 
             {/* File List or Placeholder Image */}
@@ -171,8 +173,10 @@ const FileShareComponent = () => {
                         />
                     </svg>
                      */}
-                    <h1 className="text-[80px]"> 😕 </h1>
-                    <p className="text-black-800 mt-4">You haven't uploaded any files yet.</p>
+                     {user?.role === 'guest' ? <>Copy and paste url shared to you in browser</> : <>
+                        <h1 className="text-[80px]"> 😕 </h1>
+                        <p className="text-black-800 mt-4">You haven't uploaded any files yet.</p>
+                     </>}
                 </div>
             )}
         </div>
