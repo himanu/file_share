@@ -38,6 +38,8 @@ export const removeFileAccess = (fileId, email, navigate) => async (dispatch) =>
                 email
             }
         })
+        toast.dismiss();
+        toast.success("Successfully removed access")
     } catch (err) {
         let errorMessage = ''
         if (err.status == 401) {
@@ -65,6 +67,7 @@ export const giveFileAccess = (fileId, email, navigate) => async (dispatch) => {
             type: GIVE_FILE_ACCESS_SUCCESS,
             payload: email
         })
+        toast.dismiss()
         toast.success("Successfully given Access");
     } catch (err) {
         console.log("Error ", err);
@@ -102,6 +105,7 @@ export const editFileAccess = (fileId, email, expiration_time, navigate) => asyn
                 expiration_time: response?.data?.expiration_time
             }
         })
+        toast.dismiss()
         toast.success(response?.data?.message);
     } catch (err) {
         console.log("Error ", err);

@@ -1,8 +1,8 @@
 import { baseUrl } from '../../constant';
 import axios from 'axios';
-import React, { useEffect, useState } from 'react';
+import React, { memo, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { decryptFile, downloadFile, formatDate } from './utils';
+import { decryptFile, decryptFileWithSharedKey, downloadFile, extractShareableKey, formatDate } from './utils';
 import ShareModal from './Share';
 import { Button } from '../../components/ui/button';
 import { Share2Icon } from 'lucide-react';
@@ -10,7 +10,52 @@ import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
 import { getUsers } from '../../store/auth/action';
 import { getFileAccessList } from '../../store/file/action';
+import { LOADER_OFF, LOADER_ON } from '../../store/loader/actionTypes';
 
+const RenderPreview = memo(({file}) => {
+  if (!file)
+    return null;
+  const { type } = file;
+  const previewUrl = URL.createObjectURL(file)
+  if (type.startsWith('image/')) {
+    return <img src={previewUrl} alt={file.name} className="w-full h-auto rounded-md" />;
+  }
+
+  if (type.startsWith('video/')) {
+    return (
+      <video controls className="w-full rounded-md">
+        <source src={previewUrl} type={type} />
+        Your browser does not support the video tag.
+      </video>
+    );
+  }
+
+  if (type === 'application/pdf') {
+    return (
+      <iframe
+        src={previewUrl}
+        title={file.name}
+        className="w-full h-96 border rounded-md"
+      >
+        PDF preview not supported.
+      </iframe>
+    );
+  }
+
+  if (type.startsWith('text/')) {
+    return (
+      <iframe
+        src={previewUrl}
+        title={file.name}
+        className="w-full h-48 border rounded-md"
+      >
+        Text preview not supported.
+      </iframe>
+    );
+  }
+
+  return <p className="text-gray-500">Preview not available for this file type.</p>;
+});
 const FileDetails = () => {
    const { fileId } = useParams();
    const [file, setFile] = useState();
@@ -19,47 +64,8 @@ const FileDetails = () => {
    const dispatch = useDispatch();
    const users = useSelector((state) => state.auth.users);
    const navigate = useNavigate();
-  const renderPreview = () => {
-    const { type, previewUrl = URL.createObjectURL(file) } = file;
-    if (type.startsWith('image/')) {
-      return <img src={previewUrl} alt={file.name} className="w-full h-auto rounded-md" />;
-    }
+   const cryptoKey = useRef();
 
-    if (type.startsWith('video/')) {
-      return (
-        <video controls className="w-full rounded-md">
-          <source src={previewUrl} type={type} />
-          Your browser does not support the video tag.
-        </video>
-      );
-    }
-
-    if (type === 'application/pdf') {
-      return (
-        <iframe
-          src={previewUrl}
-          title={file.name}
-          className="w-full h-96 border rounded-md"
-        >
-          PDF preview not supported.
-        </iframe>
-      );
-    }
-
-    if (type.startsWith('text/')) {
-      return (
-        <iframe
-          src={previewUrl}
-          title={file.name}
-          className="w-full h-48 border rounded-md"
-        >
-          Text preview not supported.
-        </iframe>
-      );
-    }
-
-    return <p className="text-gray-500">Preview not available for this file type.</p>;
-  };
 
   const getFile = async () => {
     try {
@@ -70,13 +76,19 @@ const FileDetails = () => {
         const decodedArray = Uint8Array.from(blob, c => c.charCodeAt(0));
 
         // Now `decodedArray` is your original encrypted data as a binary array (Uint8Array)
-        const decrypted = await decryptFile(decodedArray, localStorage.getItem("password"))
+        const decrypted = data?.files?.youAreOwner ? await decryptFile(decodedArray, localStorage.getItem("password")) : await decryptFileWithSharedKey(decodedArray, window?.location?.hash?.split("#")?.[1]);
+        if (decrypted?.error) {
+          toast.error(decrypted?.error);
+          return;
+        }
         const decryptedBlob = new Blob([decrypted.data], { type: data?.files?.fileType ?? "" });
         const decryptedFile = new File([decryptedBlob], data?.files?.filename, { type: data?.files?.fileType ?? "" });
+        cryptoKey.current = decrypted?.cryptoKey;
         setFile(decryptedFile)
         setUploadFileDate(data?.files?.upload_date)
         setOwnership(data?.files?.youAreOwner ?? false)
     } catch(error) {
+      toast.dismiss()
         if (error.status === 401) {
             toast.error("You don't have access to the file")
             navigate("/")
@@ -89,6 +101,36 @@ const FileDetails = () => {
   }
   const [modalOpen, setModalOpen] = useState(false);
 
+  const handleCopyLink = async () => {
+    try {
+      dispatch({
+        type: LOADER_ON
+      })
+      console.log(cryptoKey.current)
+      const extractedKey =  await extractShareableKey(cryptoKey.current);
+      if (!extractedKey) {
+        dispatch({
+          type: LOADER_OFF
+        })
+        toast.dismiss();
+        toast.error("Something wrong happened!")
+        return;
+      }
+
+      await navigator.clipboard.writeText(`http://localhost:5173/file/${fileId}#${extractedKey}`)
+      toast.dismiss()
+      toast.success("Successfully copied link to clipboard")
+      dispatch({
+        type: LOADER_OFF
+      })
+    } catch(err) {
+      dispatch({
+        type: LOADER_OFF
+      })
+      toast.dismiss();
+      toast.error("Something wrong happened!")
+    }
+  }
   useEffect(() => {
     getFile();
     dispatch(getFileAccessList(fileId, navigate))
@@ -113,7 +155,7 @@ const FileDetails = () => {
             isOpen={modalOpen}
             onClose={() => setModalOpen(false)}
             fileName="ExampleFile.txt"
-            copyLink={() => {}}
+            copyLink={handleCopyLink}
             users={users}
             fileId={fileId}
         />
@@ -122,7 +164,7 @@ const FileDetails = () => {
       <div className="mt-4">
         <strong className="text-black-500">File Preview:</strong>
         <div>
-            {file && renderPreview()}
+          <RenderPreview file={file} />
         </div>
       </div>
     </div>

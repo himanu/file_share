@@ -45,7 +45,8 @@ export const login = (userData, setOtpScreen) => async (dispatch) => {
         setOtpScreen(true);
         dispatch({type: LOGIN_SUCCESS, payload: {}});
     } catch(error) {
-        dispatch({type: LOGIN_FAILURE, payload: error.message});
+        toast.error(error?.response?.data?.error ?? "Something went wrong")
+        dispatch({type: LOGIN_FAILURE, payload: error?.response?.data?.error ?? "Something went wrong"});
     } finally {
         dispatch({
             type: LOADER_OFF

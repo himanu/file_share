@@ -26,7 +26,7 @@ const NavbarAvatar = ({ userEmail, onLogout }) => {
       {/* Modal */}
       {isModalOpen && (
         <div
-          className="absolute top-[40%] right-[90%] mt-2  bg-white border border-gray-200 rounded-lg shadow-lg"
+          className="z-[10] absolute top-[40%] right-[90%] mt-2  bg-white border border-gray-200 rounded-lg shadow-lg"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >

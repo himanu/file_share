@@ -136,7 +136,7 @@ class FileAccessView(APIView):
             return JsonResponse({
                 "message": "Access granted successfully.",
                 "file_access_id": file_access.id,
-                "expiration_time": file_access.expiration_time.isoformat()
+                "expiration_time": file_access.expiration_time
             }, status=201)
 
         # Edit Access
@@ -161,7 +161,7 @@ class FileAccessView(APIView):
 
             return JsonResponse({
                 "message": "Access expiration time updated successfully.",
-                "expiration_time": file_access.expiration_time.isoformat()
+                "expiration_time": file_access.expiration_time
             }, status=200)
 
         # Remove Access

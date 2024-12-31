@@ -47,6 +47,7 @@ const OTPScreen = ({email, password, setOtpScreen}) => {
       navigate("/")
     } catch (err) {
         console.log("error ", err);
+        toast.dismiss()
       if (err.status !== 500) {
         if (err?.response?.data?.redirectToLogin === true) {
           toast.error(err?.response?.data?.error);

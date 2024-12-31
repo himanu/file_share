@@ -2,7 +2,7 @@ import axios from "axios";
 import { baseUrl } from "../../constant";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { LOADER_ON, LOADER_OFF } from "../../store/loader/actionTypes";
 import { toast } from "react-toastify";
 import { allowedFileTypes, encryptFile, formatDate } from "./utils";
@@ -13,6 +13,7 @@ const FileShareComponent = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const password = localStorage.getItem("password")
+    const loading = useSelector(store => store.loader.loading)
 
     // Handle file upload
     const handleFileUpload = async (event) => {
@@ -24,6 +25,7 @@ const FileShareComponent = () => {
             const type = await fileTypeFromBlob(uploadedFile);
             console.log("file type ", type)
             if (!allowedFileTypes.includes(type?.mime)) {
+                toast.dismiss()
                 toast.error("Only PDF, PNG, JPEG and Videos can be uploaded")
                 dispatch({
                     type: LOADER_OFF
@@ -52,6 +54,7 @@ const FileShareComponent = () => {
             },
             withCredentials: true
           });
+          toast.dismiss()
           toast.success("Successfully uploaded file");
           setFiles((prev) => [...prev, {
             id,
@@ -95,6 +98,8 @@ const FileShareComponent = () => {
     useEffect(() => {
         getFiles();
     }, [])
+    if (loading)
+        return null;
 
     return (
         <div className="p-6 mt-6 mx-auto">
