@@ -117,7 +117,7 @@ const FileDetails = () => {
         return;
       }
 
-      await navigator.clipboard.writeText(`http://localhost:5173/file/${fileId}#${extractedKey}`)
+      await navigator.clipboard.writeText(`http://localhost:3000/file/${fileId}#${extractedKey}`)
       toast.dismiss()
       toast.success("Successfully copied link to clipboard")
       dispatch({
