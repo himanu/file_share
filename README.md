@@ -2,6 +2,8 @@
 
 A secure file-sharing web application where users can upload, encrypt, and share files with others. The application ensures client-side encryption for security and provides authentication with two user roles: `Guest` and `Normal`. Users can also share files with specified expiry dates.
 
+## Demo Video
+[![Watch the video]](https://github.com/himanu/file_share/blob/main/output.mp4)
 ## Features
 
 - **Client-Side Encryption**: Files are encrypted in the browser before being uploaded to the server, ensuring maximum security.
